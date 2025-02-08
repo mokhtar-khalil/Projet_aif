@@ -41,7 +41,7 @@ def recommend_movies(image):
             return [f"Error: {response.text}" for _ in range(5)]
 
         recommendations = response.json().get("recommendations", [])
-        print("recommendations en f gr", recommendations)
+        #print("recommendations en f gr", recommendations)
 
         if not recommendations:
             return ["No recommendations found" for _ in range(5)]

@@ -25,15 +25,15 @@ app = Flask(__name__)
 
 #   Définition des fichiers Google Drive
 drive_links = {
-    "bert_model": "1fltSMAOK_x6zCEPQqFf6CKR6TiM4EA64",
-    "bert_index": "1v5zoAibfmFF1xeGGegg0wvO9vxbSc9sO",
-    "glove_model": "1nsa_9aw5Vpe4gz0VPzPDTGKh6dDjGnU1",
-    "glove_index": "13QJug_qN6jEv348JeUXvRRj6hA7ZTu1M",
-    "tfidf_model": "1IfMXE6CDllcotYQHbQWSs-TlWyXTqQPA",
-    "tfidf_index": "1kniZDmnqaa4r41C8P_Yjt-aSLlXqbMRU",
-    "poster_net": "1zGq9NNs56LY9yvbHjAP6tNXRUbEnw7WN",
-    "poster_index": "1cpmvLBdcmuudczzhYJ0rpBRZijLcgkXU",
-    "movies_metadata": "1sKK14f9qYJBKFh7mEA0yx11jlEsirZut"
+    "bert_model": "https://drive.google.com/uc?id=1fltSMAOK_x6zCEPQqFf6CKR6TiM4EA64",
+    "bert_index": "https://drive.google.com/uc?id=1v5zoAibfmFF1xeGGegg0wvO9vxbSc9sO",
+    "glove_model": "https://drive.google.com/uc?id=1nsa_9aw5Vpe4gz0VPzPDTGKh6dDjGnU1",
+    "glove_index": "https://drive.google.com/uc?id=13QJug_qN6jEv348JeUXvRRj6hA7ZTu1M",
+    "tfidf_model": "https://drive.google.com/uc?id=1IfMXE6CDllcotYQHbQWSs-TlWyXTqQPA",
+    "tfidf_index": "https://drive.google.com/uc?id=1kniZDmnqaa4r41C8P_Yjt-aSLlXqbMRU",
+    "poster_net": "https://drive.google.com/uc?id=1zGq9NNs56LY9yvbHjAP6tNXRUbEnw7WN",
+    "poster_index": "https://drive.google.com/uc?id=1cpmvLBdcmuudczzhYJ0rpBRZijLcgkXU",
+    "movies_metadata": "https://drive.google.com/uc?id=1sKK14f9qYJBKFh7mEA0yx11jlEsirZut"
 }
 
 #  Lien du fichier ZIP des posters
@@ -58,18 +58,25 @@ def download_file(url, output_path):
 
 #   Télécharger les fichiers nécessaires
 for name, link in drive_links.items():
-    output_path = os.path.join(weights_dir if name != "movies_metadata" else data_dir, 
-                               name + (".pkl" if "model" in name else ".ann" if "index" in name else ".csv"))
+    # Déterminer le bon dossier (weights_dir pour modèles et index, data_dir pour les métadonnées)
+    target_dir = weights_dir if name not in ["movies_metadata"] else data_dir
+
+    # Déterminer l'extension correcte du fichier
+    if "poster_net" == name:
+        extension = ".pth"  # Modèles PyTorch (réseaux de neurones)
+    elif "model" in name:
+        extension = ".pkl"  # Modèles de vectorisation (ex: TF-IDF, GloVe, BERT)
+    elif "index" in name:
+        extension = ".ann"  # Index Annoy
+    else:
+        extension = ".csv"  # Métadonnées (ex: movies_metadata)
+
+    # Construire le chemin de sortie correct
+    output_path = os.path.join(target_dir, name + extension)
+
+    # Télécharger le fichier si non présent
     download_file(link, output_path)
 
-def normalize_path(path):
-    return os.path.normpath(path) 
-image_path = normalize_path("posters\\content\\sorted_movie_posters_paligema\\action\\1090.jpg")
-
-if os.path.exists(image_path):
-    print("Fichier trouvé :", image_path)
-else:
-    print("Le fichier est introuvable :", image_path) 
 #   Extraire le fichier ZIP des posters
 def extract_zip(zip_file, output_folder):
     if not os.path.exists(output_folder) or not os.listdir(output_folder):
@@ -97,8 +104,8 @@ poster_loader = DataLoader(poster_dataset, batch_size=32, shuffle=False)
 
 #   Argument parser
 parser = argparse.ArgumentParser()
-parser.add_argument('--model_path', type=str, default=os.path.join(weights_dir, 'movie_poster_net.pth'))
-parser.add_argument('--annoy_index', type=str, default=os.path.join(weights_dir, 'movie_posters.ann'))
+parser.add_argument('--model_path', type=str, default=os.path.join(weights_dir, 'poster_net.pth'))
+parser.add_argument('--annoy_index', type=str, default=os.path.join(weights_dir, 'poster_index.ann'))
 parser.add_argument('--tfidf_index', type=str, default=os.path.join(weights_dir, 'tfidf_index.ann'))
 parser.add_argument('--bert_index', type=str, default=os.path.join(weights_dir, 'bert_index.ann'))
 parser.add_argument('--glove_index', type=str, default=os.path.join(weights_dir, 'glove_index.ann'))
@@ -170,14 +177,14 @@ def recommend():
     try:
         file = request.files['file']
         img_pil = Image.open(file.stream).convert('RGB')
-        print("img_pil = ",img_pil)
+        #print("img_pil = ",img_pil)
         tensor = transform(img_pil).unsqueeze(0).to(device)
         with torch.no_grad():
             vector = recommend_model(tensor).squeeze(0).tolist()
         indices = annoy_index.get_nns_by_vector(vector, 5)
-        print("indices : ",indices)
+        #print("indices : ",indices)
         recommended_paths = [os.path.abspath(os.path.join(BASE_DIR, os.path.normpath(poster_dataset.imgs[i][0]))) for i in indices]
-        print(recommended_paths)
+        #print(recommended_paths)
         return jsonify({"recommendations": recommended_paths})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
