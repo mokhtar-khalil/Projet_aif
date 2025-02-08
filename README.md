@@ -47,8 +47,8 @@ Ce projet est un système de recommandation de films et de classification d'affi
 
 ### **Cloner le dépôt**
 ```bash
-git clone https://github.com/votre-repo/movie-recommender.git
-cd movie-recommender
+git clone https://github.com/mokhtar-khalil/Projet_aif.git
+cd Projet_aif
 ```
 
 ### **Exécution avec Docker**
@@ -122,7 +122,7 @@ curl -X POST http://127.0.0.1:5005/recommend_by_description -H "Content-Type: ap
 
 
 
-### **2️⃣ Vérification des conteneurs Docker**
+### ** Vérification des conteneurs Docker**
 ```bash
 docker ps -a
 ```
@@ -131,7 +131,7 @@ Si un conteneur plante :
 docker-compose down && docker-compose up --build
 ```
 
-### **3️⃣ L’API ou Gradio ne répond pas**
+### ** L’API ou Gradio ne répond pas**
 - Vérifier si les **ports 5005 et 7860** sont utilisés.
 - Relancer les services manuellement.
 
@@ -146,4 +146,4 @@ docker-compose down && docker-compose up --build
 - **Skander RAHAL**
 - **Adnane BEN ALI**
 
-Projet réalisé dans le cadre d'un projet universitaire en **Machine Learning & Deep Learning**. 🚀
+
